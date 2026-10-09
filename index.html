@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grammar Gym</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.5; min-height: 100vh; }
+header { background: #fff; border-bottom: 1px solid #ddd; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+header h1 { font-size: 1.25rem; font-weight: 600; color: #2563eb; }
+.streak-display { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+.streak-fire { color: #f59e0b; }
+header nav { display: flex; gap: 4px; background: #f0f0f0; padding: 4px; border-radius: 8px; }
+header nav button { background: none; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; color: #666; transition: all 0.15s; }
+header nav button:hover { background: #e0e0e0; }
+header nav button.active { background: #fff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+main { max-width: 780px; margin: 0 auto; padding: 20px; min-height: calc(100vh - 80px); }
+.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.card h2 { font-size: 1.1rem; margin-bottom: 16px; color: #1f2937; }
+.due-count { text-align: center; padding: 32px 20px; }
+.due-count .number { font-size: 4rem; font-weight: 700; color: #2563eb; line-height: 1; }
+.due-count .label { color: #666; margin-top: 8px; font-size: 0.95rem; }
+.btn { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 500; transition: background 0.15s; }
+.btn:hover { background: #1d4ed8; }
+.btn-secondary { background: #64748b; }
+.btn-secondary:hover { background: #475569; }
+.btn-danger { background: #ef4444; }
+.btn-danger:hover { background: #dc2626; }
+.btn-small { padding: 6px 12px; font-size: 0.85rem; }
+.btn-outline { background: transparent; border: 1px solid #2563eb; color: #2563eb; }
+.btn-outline:hover { background: #2563eb; color: white; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; justify-content: center; }
+.btn-group-left { display: flex; gap: 8px; flex-wrap: wrap; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.stat-card { background: #fff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.stat-card .value { font-size: 2rem; font-weight: 700; color: #2563eb; }
+.stat-card .label { color: #666; font-size: 0.85rem; margin-top: 4px; }
+.progress-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin: 12px 0; }
+.progress-bar .fill { height: 100%; background: #2563eb; transition: width 0.3s; }
+.progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: #666; margin-bottom: 8px; }
+.weak-category { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+.weak-category:last-child { border-bottom: none; }
+.weak-category .cat-name { font-weight: 500; font-family: monospace; }
+.weak-category .cat-pct { color: #666; font-size: 0.9rem; }
+.session-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.session-item:last-child { border-bottom: none; }
+textarea { width: 100%; min-height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: monospace; font-size: 0.9rem; resize: vertical; }
+textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+select { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; background: #fff; cursor: pointer; }
+select:focus { outline: none; border-color: #2563eb; }
+.preview-list { max-height: 300px; overflow-y: auto; margin-top: 16px; }
+.preview-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px; border-bottom: 1px solid #f0f0f0; font-family: monospace; font-size: 0.85rem; flex-wrap: wrap; }
+.preview-item .wrong { color: #ef4444; }
+.preview-item .right { color: #16a34a; }
+.preview-item .arrow { color: #999; margin: 0 4px; }
+.preview-count { font-size: 0.9rem; color: #666; margin-bottom: 8px; }
+.error-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.error-table th { text-align: left; padding: 10px 12px; background: #f9fafb; color: #666; font-weight: 500; border-bottom: 2px solid #e5e7eb; }
+.error-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+.error-table tr:hover { background: #f9fafb; }
+.sentence-wrong { color: #dc2626; margin-right: 8px; }
+.sentence-right { color: #16a34a; }
+.status-pill { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; }
+.status-new { background: #fef3c7; color: #92400e; }
+.status-learning { background: #dbeafe; color: #1e40af; }
+.status-mastered { background: #dcfce7; color: #166534; }
+.status-fossil { background: #fee2e2; color: #991b1b; }
+.bank-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+.filter-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-group label { font-size: 0.9rem; color: #666; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.filter-group input[type="checkbox"] { margin-right: 4px; }
+.exercise-card { text-align: center; }
+.exercise-type { font-size: 0.85rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.sentence-display { font-size: 1.25rem; padding: 20px; background: #f9fafb; border-radius: 8px; margin: 16px 0; text-align: center; line-height: 1.6; }
+.sentence-display .speaker-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #666; margin-left: 8px; padding: 4px; border-radius: 4px; }
+.sentence-display .speaker-btn:hover { background: #e5e7eb; color: #2563eb; }
+input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: inherit; }
+input[type="text"]:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.confidence-row { display: flex; justify-content: center; gap: 12px; margin: 16px 0; align-items: center; }
+.confidence-btn { padding: 8px 16px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; transition: all 0.15s; }
+.confidence-btn:hover { background: #f5f5f5; }
+.confidence-btn.selected { border-color: #2563eb; background: #dbeafe; }
+.feedback-correct { background: #dcfce7; color: #166534; padding: 16px; border-radius: 8px; margin: 16px 0; }
+.feedback-wrong { background: #fee2e2; color: #991b1b; padding: 16px; border-radius: 8px; margin: 16px 0; }
+.feedback-note { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 0.9rem; }
+.similar-sentences { background: #f0f9ff; padding: 12px; border-radius: 8px; margin: 12px 0; }
+.similar-sentences h4 { font-size: 0.85rem; color: #0369a1; margin-bottom: 8px; }
+.similar-sentences ul { list-style: none; font-family: monospace; font-size: 0.9rem; }
+.similar-sentences li { padding: 4px 0; border-bottom: 1px solid #e0f2fe; }
+.back-link { display: inline-flex; align-items: center; gap: 4px; color: #666; cursor: pointer; font-size: 0.9rem; margin-bottom: 16px; background: none; border: none; padding: 4px 8px; border-radius: 4px; }
+.back-link:hover { color: #2563eb; background: #f5f5f5; }
+.empty-state { text-align: center; padding: 40px 20px; color: #666; }
+.toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.tag { display: inline-block; background: #e5e7eb; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-family: monospace; }
+.blind-spot { color: #dc2626; font-weight: 500; }
+.weekly-card { background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); border: 1px solid #bfdbfe; }
+.weekly-card h3 { color: #1e40af; margin-bottom: 12px; }
+.weekly-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
+.weekly-stat { text-align: center; padding: 12px; background: #fff; border-radius: 8px; }
+.weekly-stat .val { font-size: 1.5rem; font-weight: 700; color: #2563eb; }
+.weekly-stat .lbl { font-size: 0.8rem; color: #666; }
+.category-improvement { padding: 12px; background: #fff; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; }
+.category-improvement .improved { color: #16a34a; font-weight: 500; }
+.category-improvement .worsened { color: #dc2626; font-weight: 500; }
+.mic-btn { background: #e5e7eb; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 4px; }
+.mic-btn:hover { background: #d1d5db; }
+.mic-btn.listening { background: #f59e0b; color: white; }
+.note-input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; margin-top: 8px; }
+.note-input:focus { outline: none; border-color: #2563eb; }
+.history-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px solid #f0f0f0; }
+.history-item .date { color: #666; }
+.history-item .result-correct { color: #16a34a; }
+.history-item .result-wrong { color: #dc2626; }
+.expand-btn { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 0.8rem; padding: 2px 6px; }
+.expand-btn:hover { text-decoration: underline; }
+.error-detail { margin-top: 16px; padding: 16px; background: #f9fafb; border-radius: 8px; }
+.error-detail h4 { font-size: 0.9rem; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.error-detail .field { margin-bottom: 12px; }
+.error-detail .field-label { font-size: 0.8rem; color: #666; margin-bottom: 4px; }
+@media (max-width: 600px) {
+  header { flex-direction: column; gap: 12px; align-items: stretch; }
+  header nav { width: 100%; justify-content: center; }
+  .due-count .number { font-size: 3rem; }
+  main { padding: 16px; }
+  .btn { width: 100%; }
+  .bank-controls { flex-direction: column; align-items: stretch; }
+  .filter-group { justify-content: center; }
+}
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Grammar Gym</h1>
+  <div class="streak-display">
+    <span class="streak-fire">&#128293;</span>
+    <span id="streakDisplay">0 days</span>
+  </div>
+  <nav>
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="practice">Practice</button>
+    <button data-view="bank">Bank</button>
+    <button data-view="import">Import</button>
+  </nav>
+</header>
+<main>
+  <div id="appView"></div>
+</main>
+
+<script>
+(function() {
+'use strict';
+
+var CATEGORIES = {
+  'G-SVA': 'Subject-verb agreement',
+  'G-TNS': 'Tense',
+  'G-ART': 'Articles',
+  'G-PREP': 'Prepositions',
+  'G-VP': 'Verb patterns',
+  'G-WO': 'Word order',
+  'G-REL': 'Relative clauses',
+  'G-COND': 'Conditionals',
+  'G-COMP': 'Comparatives/superlatives',
+  'G-FRAG': 'Fragments/structure',
+  'G-PLU': 'Plurals/countability',
+  'G-MOD': 'Modals',
+  'L-WC': 'Word choice',
+  'L-COL': 'Collocation',
+  'L-WF': 'Word form'
+};
+
+var SRS_INTERVALS = [0, 1, 3, 7, 14, 30, 60];
+var FALLBACK_DISTRACTORS = ['have', 'has', 'having', 'is', 'are', 'was', 'were', 'to do', 'doing', 'in', 'on', 'at', 'the', 'a', 'an'];
+var STATE_KEY = 'grammar-gym-v1';
+
+function defaultState() {
+  return { errors: [], sessions: [], settings: { streak_days: 0, last_practice_date: null, daily_goal: 10 } };
+}
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STATE_KEY);
+    if (raw) { var p = JSON.parse(raw); if (p && Array.isArray(p.errors)) return p; }
+  } catch (e) {}
+  return defaultState();
+}
+
+function saveState() { try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {} }
+var state = loadState();
+
+function generateId() { return Math.random().toString(36).substring(2, 10); }
+
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function addDays(dateStr, days) {
+  var p = dateStr.split('-');
+  var d = new Date(p[0], p[1] - 1, p[2]);
+  d.setDate(d.getDate() + days);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function diffSentence(wrong, right) {
+  var ww = wrong.split(/\s+/), rw = right.split(/\s+/);
+  var pl = 0, ml = Math.min(ww.length, rw.length);
+  while (pl < ml && ww[pl] === rw[pl]) pl++;
+  var sl = 0;
+  while (sl < ml - pl && ww[ww.length - 1 - sl] === rw[rw.length - 1 - sl]) sl++;
+  var ws = pl, we = ww.length - sl, rs = pl, re = rw.length - sl;
+  return { wrongPart: (ws < we) ? ww.slice(ws, we).join(' ') : '', rightPart: (rs < re) ? rw.slice(rs, re).join(' ') : '' };
+}
+
+function getStatus(err) {
+  if (err.fossil) return 'fossil';
+  if (err.streak >= 4 && err.attempts > 0 && err.correct / err.attempts >= 0.8) return 'mastered';
+  if (err.attempts > 0) return 'learning';
+  return 'new';
+}
+
+function isDue(err) { return !err.next_due || err.next_due <= todayStr(); }
+
+function shuffleArray(arr) {
+  var r = arr.slice();
+  for (var i = r.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = r[i]; r[i] = r[j]; r[j] = t; }
+  return r;
+}
+
+function getCategoryLabel(code) { return CATEGORIES[code] || code; }
+
+function escapeHtml(str) { var d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+function daysUntil(dateStr) {
+  var t = new Date(), tg = new Date(dateStr.substring(0, 4), dateStr.substring(5, 7) - 1, dateStr.substring(8, 10));
+  return Math.floor((tg - t) / (1000 * 60 * 60 * 24));
+}
+
+var currentView = 'dashboard';
+var practiceState = null;
+
+function render() {
+  var vd = document.getElementById('appView');
+  vd.innerHTML = '';
+  if (viewFunctions[currentView]) viewFunctions[currentView]();
+  updateStreakDisplay();
+  updateNavButtons();
+}
+
+function updateNavButtons() {
+  document.querySelectorAll('header nav button').forEach(function(b) { b.classList.toggle('active', b.dataset.view === currentView); });
+}
+
+function updateStreakDisplay() {
+  var el = document.getElementById('streakDisplay');
+  if (el) el.textContent = state.settings.streak_days + ' day' + (state.settings.streak_days !== 1 ? 's' : '');
+}
+
+function navigate(view) { currentView = view; practiceState = null; render(); }
+
+var viewFunctions = {};
+
+viewFunctions.dashboard = function() {
+  var dueCount = getDueCount();
+  var stats = getStats();
+  var weakest = getWeakestCategories(3);
+  var sessions = getRecentSessions(5);
+  var html = '<div class="card due-count">';
+  html += '<div class="number">' + dueCount + '</div>';
+  html += '<div class="label">due today</div>';
+  if (dueCount > 0) {
+    html += '<button class="btn" onclick="window.__gym.navigate(\'practice\')">Start practice</button>';
+  } else {
+    html += '<button class="btn btn-secondary" onclick="window.__gym.navigate(\'import\')">Import errors</button>';
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h2>Progress</h2>';
+  html += '<div class="grid-3">';
+  html += '<div class="stat-card"><div class="value">' + stats.total + '</div><div class="label">Total errors</div></div>';
+  html += '<div class="stat-card"><div class="value">' + stats.newCount + '</div><div class="label">New</div></div>';
+  html += '<div class="stat-card"><div class="value">' + stats.learningCount + '</div><div class="label">Learning</div></div>';
+  html += '<div class="stat-card"><div class="value">' + stats.masteredCount + '</div><div class="label">Mastered</div></div>';
+  html += '</div>';
+  html += '<div class="progress-label"><span>Mastery progress</span><span>' + stats.masteredCount + ' / ' + stats.total + '</span></div>';
+  html += '<div class="progress-bar"><div class="fill" style="width:' + (stats.total > 0 ? (stats.masteredCount / stats.total * 100) : 0) + '%"></div></div>';
+  html += '</div>';
+
+  if (weakest.length > 0) {
+    html += '<div class="card"><h2>Needs work</h2>';
+    weakest.forEach(function(cat) {
+      html += '<div class="weak-category">';
+      html += '<span><span class="cat-name">' + cat.code + '</span> ' + getCategoryLabel(cat.code) + '</span>';
+      html += '<span class="cat-pct">' + cat.accuracy + '% correct</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="card"><h2>Recent sessions</h2>';
+  if (sessions.length === 0) {
+    html += '<div class="empty-state"><p>No sessions yet. Import some errors to get started.</p></div>';
+  } else {
+    sessions.forEach(function(sess) {
+      html += '<div class="session-item">';
+      html += '<span>' + sess.date + '</span>';
+      html += '<span>+' + sess.added + ' errors</span>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
+  var weekly = getWeeklyReview();
+  if (weekly && (weekly.totalAnswers > 0 || weekly.newThisWeek > 0)) {
+    html += '<div class="card weekly-card"><h3>This week</h3>';
+    html += '<div class="weekly-stats">';
+    html += '<div class="weekly-stat"><div class="val">' + weekly.totalAnswers + '</div><div class="lbl">Answers</div></div>';
+    html += '<div class="weekly-stat"><div class="val">' + weekly.accuracy + '%</div><div class="lbl">Correct</div></div>';
+    html += '<div class="weekly-stat"><div class="val">' + weekly.newThisWeek + '</div><div class="lbl">New added</div></div>';
+    html += '<div class="weekly-stat"><div class="val">' + weekly.masteredThisWeek + '</div><div class="lbl">Mastered</div></div>';
+    html += '</div>';
+    if (weekly.improvements && weekly.improvements.length > 0) {
+      html += '<div class="category-improvement">';
+      weekly.improvements.forEach(function(imp) {
+        var cls = imp.change >= 0 ? 'improved' : 'worsened';
+        var arrow = imp.change >= 0 ? '&#8593;' : '&#8595;';
+        html += '<span class="' + cls + '">' + imp.code + ': ' + imp.from + '% ' + arrow + ' ' + imp.to + '%</span> ';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  document.getElementById('appView').innerHTML = html;
+};
+
+viewFunctions.practice = function() {
+  var html = '<div class="card">';
+
+  if (!practiceState) {
+    var totalDue = getDueItems().length;
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+    html += '<button class="back-link" onclick="window.__gym.navigate(\'dashboard\')">Back</button>';
+    html += '<span style="color:#666;font-size:0.9rem;">' + totalDue + ' due</span>';
+    html += '</div>';
+
+    html += '<div class="filter-group" style="margin-bottom:16px;">';
+    html += '<label>Category: <select id="practiceCategory" onchange="window.__gym.startPractice()">';
+    html += '<option value="all">All categories</option>';
+    Object.keys(CATEGORIES).forEach(function(cat) { html += '<option value="' + cat + '">' + cat + '</option>'; });
+    html += '</select></label>';
+    html += '<label><input type="checkbox" id="practiceFossil" onchange="window.__gym.startPractice()"> Fossilized only</label>';
+    html += '</div>';
+
+    if (totalDue === 0) {
+      html += '<div class="empty-state"><p>No items due for practice.</p><p>Import errors or check back later.</p></div>';
+    } else {
+      html += '<div class="card exercise-card" id="exerciseArea"></div>';
+    }
+  } else {
+    var ps = practiceState;
+    var remaining = ps.queue.length;
+    var total = ps.total;
+
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+    html += '<button class="back-link" onclick="window.__gym.cancelPractice()">Back</button>';
+    html += '<span style="color:#666;font-size:0.9rem;">' + (total - remaining + 1) + '/' + total + ' - ' + remaining + ' left</span>';
+    html += '</div>';
+
+    if (ps.queue[ps.currentIndex]) {
+      var item = ps.queue[ps.currentIndex];
+      html += generateExerciseHtml(item, ps);
+    } else if (remaining === 0) {
+      finishPractice(ps.answered);
+    }
+  }
+
+  html += '</div>';
+  document.getElementById('appView').innerHTML = html;
+
+  if (practiceState && ps && ps.queue[ps.currentIndex]) {
+    attachExerciseHandlers();
+  }
+};
+
+function generateExerciseHtml(item, ps) {
+  var html = '';
+  var type = item._exerciseType || 'rewrite';
+
+  html += '<div id="exerciseContent">';
+  html += '<div class="exercise-type">' + getExerciseTypeLabel(type) + '</div>';
+
+  if (type === 'correctornot') {
+    html += '<div class="sentence-display">';
+    html += 'Is this sentence correct?<br><br>';
+    html += '<span style="font-size:1.1rem;color:' + (item._showCorrect ? '#16a34a' : '#dc2626') + '">' + escapeHtml(item._displaySentence) + '</span>';
+    html += '<button class="speaker-btn" onclick="window.__gym.speak(\'' + escapeHtml(item._displaySentence) + '\')" title="Listen">&#128483;</button>';
+    html += '</div>';
+    html += '<div class="btn-group">';
+    html += '<button class="btn" onclick="window.__gym.answerCorrectOrNot(true)">Correct</button>';
+    html += '<button class="btn btn-secondary" onclick="window.__gym.answerCorrectOrNot(false)">Incorrect</button>';
+    html += '</div>';
+  } else if (type === 'mc') {
+    html += '<div class="sentence-display">';
+    html += 'Choose the correct word:<br><br>';
+    html += '<span style="font-size:1.05rem;color:#666;">' + escapeHtml(item._mcContext) + '</span>';
+    html += '<button class="speaker-btn" onclick="window.__gym.speak(\'' + escapeHtml(item._mcContext) + '\')" title="Listen">&#128483;</button>';
+    html += '</div>';
+    html += '<div class="btn-group">';
+    (item._mcOptions || []).forEach(function(opt, idx) {
+      html += '<button class="btn btn-outline mc-option" data-idx="' + idx + '" onclick="window.__gym.answerMC(' + idx + ')">' + escapeHtml(opt) + '</button>';
+    });
+    html += '</div>';
+  } else if (type === 'gapfill') {
+    var ctx = item._gapContext || item.right_sentence;
+    var gw = item._gapWord || '';
+    var parts = ctx.split(gw);
+    var display = parts[0] + ' ______ ' + (parts[1] || '');
+    html += '<div class="sentence-display">';
+    html += 'Fill in the blank:<br><br>';
+    html += '<span style="font-size:1.1rem;">' + escapeHtml(display) + '</span>';
+    html += '<button class="speaker-btn" onclick="window.__gym.speak(\'' + escapeHtml(ctx) + '\')" title="Listen">&#128483;</button>';
+    html += '</div>';
+    html += '<input type="text" id="answerInput" placeholder="Type the missing word..." onkeydown="if(event.key===\'Enter\')window.__gym.checkRewriteAnswer()">';
+    html += '<div class="btn-group-left">';
+    html += '<button class="btn" onclick="window.__gym.checkRewriteAnswer()">Check</button>';
+    html += '<button class="btn btn-secondary mic-btn" id="micBtn" onclick="window.__gym.startMic()">Speak</button>';
+    html += '</div>';
+  } else {
+    html += '<div class="sentence-display">';
+    html += 'Rewrite this sentence correctly:<br><br>';
+    html += '<span style="font-size:1.1rem;color:#dc2626;">' + escapeHtml(item.wrong_sentence) + '</span>';
+    html += '<button class="speaker-btn" onclick="window.__gym.speak(\'' + escapeHtml(item.wrong_sentence) + '\')" title="Listen">&#128483;</button>';
+    html += '</div>';
+    html += '<input type="text" id="answerInput" placeholder="Type your correction..." onkeydown="if(event.key===\'Enter\')window.__gym.checkRewriteAnswer()">';
+    html += '<div class="btn-group-left">';
+    html += '<button class="btn" onclick="window.__gym.checkRewriteAnswer()">Check</button>';
+    html += '<button class="btn btn-secondary mic-btn" id="micBtn" onclick="window.__gym.startMic()">Speak</button>';
+    html += '</div>';
+  }
+
+  html += '<div class="confidence-row" id="confidenceRow">';
+  html += '<span style="color:#666;font-size:0.85rem;">Confidence:</span>';
+  for (var c = 1; c <= 3; c++) {
+    html += '<button class="confidence-btn" data-conf="' + c + '" onclick="window.__gym.selectConfidence(' + c + ')">' + c + (c === 1 ? ' unsure' : c === 2 ? ' fairly' : ' certain') + '</button>';
+  }
+  html += '</div>';
+
+  html += '<div class="btn-group">';
+  html += '<button class="btn btn-secondary" onclick="window.__gym.markNotSure()">Not sure</button>';
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+function getExerciseTypeLabel(type) {
+  var labels = { 'rewrite': 'Rewrite', 'gapfill': 'Gap fill', 'mc': 'Multiple choice', 'correctornot': 'Correct or not' };
+  return labels[type] || 'Exercise';
+}
+
+function startPractice() {
+  var catEl = document.getElementById('practiceCategory');
+  var fossilEl = document.getElementById('practiceFossil');
+  var category = catEl ? catEl.value : 'all';
+  var fossilOnly = fossilEl ? fossilEl.checked : false;
+
+  var items = getDueItems(category, fossilOnly);
+
+  if (items.length === 0) {
+    document.getElementById('appView').innerHTML = '<div class="card"><div class="empty-state"><p>No items match your filters.</p></div></div>';
+    return;
+  }
+
+  items.forEach(function(item) {
+    item._exerciseType = pickExerciseType(item);
+    item._showCorrect = (item._exerciseType === 'correctornot' && Math.random() > 0.5);
+    item._displaySentence = item._showCorrect ? item.right_sentence : item.wrong_sentence;
+    var diff = diffSentence(item.wrong_sentence, item.right_sentence);
+    item._diff = diff;
+    if (item._exerciseType === 'gapfill' && diff.rightPart) {
+      item._gapContext = item.right_sentence;
+      item._gapWord = diff.rightPart;
+    }
+    if (item._exerciseType === 'mc') {
+      var options = generateDistractors(item);
+      var ci = Math.floor(Math.random() * options.length);
+      options[ci] = diff.rightPart;
+      item._mcOptions = shuffleArray(options);
+      item._mcCorrectIdx = ci;
+      var sw = item.right_sentence.split(' ');
+      var di = sw.indexOf(diff.rightPart);
+      if (di === -1) di = sw.indexOf(diff.rightPart.toLowerCase());
+      var cb = di > 0 ? sw.slice(0, di).join(' ') : '';
+      var ca = di < sw.length - 1 ? sw.slice(di + 1).join(' ') : '';
+      item._mcContext = cb + ' ______ ' + ca;
+    }
+  });
+
+  practiceState = { queue: items, currentIndex: 0, total: items.length, answered: { correct: 0, wrong: 0, skipped: 0 }, confidence: null };
+  render();
+}
+
+window.__gym = {
+  navigate: navigate,
+  startPractice: startPractice,
+  cancelPractice: function() { practiceState = null; render(); },
+  selectConfidence: function(level) {
+    document.querySelectorAll('.confidence-btn').forEach(function(b) {
+      b.classList.toggle('selected', parseInt(b.dataset.conf) === level);
+    });
+    practiceState.confidence = level;
+  },
+  checkRewriteAnswer: function() {
+    if (!practiceState || !practiceState.queue[practiceState.currentIndex]) return;
+    var item = practiceState.queue[practiceState.currentIndex];
+    var input = document.getElementById('answerInput');
+    if (!input || !input.value.trim()) { if (input) input.style.borderColor = '#ef4444'; return; }
+    var answer = input.value.trim().toLowerCase();
+    var diff = item._diff || diffSentence(item.wrong_sentence, item.right_sentence);
+    var correct = false;
+    if (item._exerciseType === 'rewrite') {
+      correct = normalizeAnswer(answer) === normalizeAnswer(item.right_sentence.toLowerCase());
+    } else if (item._exerciseType === 'gapfill') {
+      correct = normalizeAnswer(answer) === normalizeAnswer(diff.rightPart.toLowerCase());
+    }
+    practiceState.answered[correct ? 'correct' : 'wrong']++;
+    recordAnswer(item, correct, practiceState.confidence || 1);
+    showFeedback(item, correct);
+    if (correct && item.similar_sentences && item.similar_sentences.length > 0) { appendSimilarSentences(item.similar_sentences); }
+    attachNextHandler(item);
+    render();
+  },
+  answerMC: function(idx) {
+    if (!practiceState || !practiceState.queue[practiceState.currentIndex]) return;
+    var item = practiceState.queue[practiceState.currentIndex];
+    var correct = idx === item._mcCorrectIdx;
+    practiceState.answered[correct ? 'correct' : 'wrong']++;
+    recordAnswer(item, correct, practiceState.confidence || 1);
+    showFeedback(item, correct);
+    if (correct && item.similar_sentences && item.similar_sentences.length > 0) { appendSimilarSentences(item.similar_sentences); }
+    attachNextHandler(item);
+    render();
+  },
+  answerCorrectOrNot: function(userSaysCorrect) {
+    if (!practiceState || !practiceState.queue[practiceState.currentIndex]) return;
+    var item = practiceState.queue[practiceState.currentIndex];
+    var actualCorrect = item._showCorrect;
+    var correct = userSaysCorrect === actualCorrect;
+    practiceState.answered[correct ? 'correct' : 'wrong']++;
+    recordAnswer(item, correct, practiceState.confidence || 1);
+    showFeedback(item, correct);
+    if (correct && item.similar_sentences && item.similar_sentences.length > 0) { appendSimilarSentences(item.similar_sentences); }
+    attachNextHandler(item);
+    render();
+  },
+  markNotSure: function() {
+    if (!practiceState || !practiceState.queue[practiceState.currentIndex]) return;
+    practiceState.answered.skipped++;
+    var q = practiceState.queue;
+    var idx = practiceState.currentIndex;
+    if (idx + 3 < q.length) { var m = q.splice(idx, 1)[0]; q.splice(idx + 3, 0, m); }
+    practiceState.confidence = null;
+    render();
+  },
+  speak: function(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  },
+  startMic: function() {
+    var btn = document.getElementById('micBtn');
+    if (!btn) return;
+    if (!window.webkitSpeechRecognition && !window.SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser. Please type your answer.');
+      return;
+    }
+    var input = document.getElementById('answerInput');
+    if (!input) return;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var rec = new SR();
+    rec.lang = 'en-US';
+    rec.continuous = false;
+    rec.interimResults = false;
+    btn.classList.add('listening');
+    btn.textContent = 'Listening...';
+    rec.onresult = function(e) { input.value = e.results[0][0].transcript; btn.classList.remove('listening'); btn.innerHTML = 'Speak'; setTimeout(function() { window.__gym.checkRewriteAnswer(); }, 300); };
+    rec.onerror = function() { btn.classList.remove('listening'); btn.innerHTML = 'Speak'; };
+    rec.start();
+  }
+};
+
+function normalizeAnswer(answer) { return answer.replace(/[.,!?;:]+$/, '').trim().toLowerCase(); }
+
+function attachExerciseHandlers() {
+  var cr = document.getElementById('confidenceRow');
+  if (cr) cr.style.display = '';
+}
+
+function appendSimilarSentences(sentences) {
+  var content = document.getElementById('exerciseContent');
+  if (!content) return;
+  var div = document.createElement('div');
+  div.className = 'similar-sentences';
+  div.innerHTML = '<h4>Now try these:</h4><ul>';
+  sentences.forEach(function(s) { div.innerHTML += '<li>' + escapeHtml(s) + '</li>'; });
+  div.innerHTML += '</ul>';
+  content.appendChild(div);
+}
+
+function attachNextHandler(item) {
+  var content = document.getElementById('exerciseContent');
+  if (!content) return;
+  var w = document.createElement('div');
+  w.className = 'btn-group';
+  w.style.marginTop = '16px';
+  var isLast = !practiceState.queue[practiceState.currentIndex + 1];
+  w.innerHTML = '<button class="btn" onclick="window.__gym.nextExercise()">' + (isLast ? 'Finish' : 'Next') + '</button>';
+  content.appendChild(w);
+}
+
+window.__gym.nextExercise = function() {
+  if (!practiceState) return;
+  practiceState.currentIndex++;
+  if (practiceState.currentIndex >= practiceState.queue.length) {
+    finishPractice(practiceState.answered);
+  } else {
+    render();
+  }
+};
+
+function finishPractice(answered) {
+  var total = answered.correct + answered.wrong + answered.skipped;
+  var accuracy = total > 0 ? Math.round(answered.correct / (answered.correct + answered.wrong) * 100) : 0;
+  if (answered.correct + answered.wrong >= 5) {
+    var today = todayStr();
+    if (state.settings.last_practice_date === today) {
+    } else if (state.settings.last_practice_date) {
+      var ld = new Date(state.settings.last_practice_date);
+      var td = new Date(today);
+      var dd = Math.floor((td - ld) / (1000 * 60 * 60 * 24));
+      state.settings.streak_days = dd === 1 ? state.settings.streak_days + 1 : 1;
+    } else {
+      state.settings.streak_days = 1;
+    }
+    state.settings.last_practice_date = today;
+  }
+  addSession(answered.correct + answered.wrong);
+  practiceState = null;
+  var html = '<div class="card">';
+  html += '<h2 style="text-align:center;margin-bottom:24px;">Session complete!</h2>';
+  html += '<div class="grid-3" style="margin-bottom:24px;">';
+  html += '<div class="stat-card"><div class="value">' + answered.correct + '</div><div class="label">Correct</div></div>';
+  html += '<div class="stat-card"><div class="value">' + answered.wrong + '</div><div class="label">Wrong</div></div>';
+  html += '<div class="stat-card"><div class="value">' + accuracy + '%</div><div class="label">Accuracy</div></div>';
+  html += '</div>';
+  html += '<div class="btn-group">';
+  html += '<button class="btn" onclick="window.__gym.navigate(\'dashboard\')">Back to Dashboard</button>';
+  html += '<button class="btn btn-secondary" onclick="window.__gym.navigate(\'practice\')">Practice more</button>';
+  html += '</div>';
+  html += '</div>';
+  document.getElementById('appView').innerHTML = html;
+  updateStreakDisplay();
+  saveState();
+}
+
+function showFeedback(item, correct) {
+  var content = document.getElementById('exerciseContent');
+  if (!content) return;
+  var diff = item._diff || diffSentence(item.wrong_sentence, item.right_sentence);
+  content.innerHTML = '';
+
+  if (correct) {
+    var fb = document.createElement('div');
+    fb.className = 'feedback-correct';
+    fb.innerHTML = '<strong>Correct!</strong>';
+    var note = item.note;
+    if (note && practiceState && practiceState.answered.wrong > 0) {
+      var nd = document.createElement('div');
+      nd.className = 'feedback-note';
+      nd.innerHTML = note;
+      fb.appendChild(nd);
+    }
+    if (diff.rightPart) {
+      var tip = document.createElement('div');
+      tip.style.marginTop = '8px';
+      tip.style.fontSize = '0.9rem';
+      tip.textContent = 'Use "' + diff.rightPart + '" instead of "' + diff.wrongPart + '".';
+      fb.appendChild(tip);
+    }
+    if (item.similar_sentences && item.similar_sentences.length > 0) {
+      var sd = document.createElement('div');
+      sd.className = 'similar-sentences';
+      sd.innerHTML = '<h4>Now try these:</h4><ul>';
+      item.similar_sentences.forEach(function(s) { sd.innerHTML += '<li>' + escapeHtml(s) + '</li>'; });
+      sd.innerHTML += '</ul>';
+      fb.appendChild(sd);
+    }
+    content.appendChild(fb);
+  } else {
+    var fb = document.createElement('div');
+    fb.className = 'feedback-wrong';
+    var isBS = practiceState && practiceState.confidence === 3;
+    fb.innerHTML = '<strong>Not quite</strong>' + (isBS ? ' <span class="blind-spot">Blind spot!</span>' : '');
+    var corr = document.createElement('div');
+    corr.style.marginTop = '8px';
+    corr.innerHTML = 'The correct sentence is: <span style="color:#16a34a;">' + escapeHtml(item.right_sentence) + '</span>';
+    fb.appendChild(corr);
+    var note = item.note;
+    if (note) {
+      var nd = document.createElement('div');
+      nd.className = 'feedback-note';
+      nd.innerHTML = note;
+      fb.appendChild(nd);
+    }
+    if (diff.rightPart) {
+      var tip = document.createElement('div');
+      tip.style.marginTop = '8px';
+      tip.style.fontSize = '0.9rem';
+      tip.textContent = 'Use "' + diff.rightPart + '" instead of "' + diff.wrongPart + '".';
+      fb.appendChild(tip);
+    }
+    content.appendChild(fb);
+  }
+}
+
+viewFunctions.import = function() {
+  var html = '<div class="card">';
+  html += '<h2>Import errors</h2>';
+  html += '<div style="margin-bottom:16px;">';
+  html += '<label>Category: <select id="importCategory">';
+  Object.keys(CATEGORIES).forEach(function(cat) {
+    html += '<option value="' + cat + '">' + cat + ' - ' + getCategoryLabel(cat) + '</option>';
+  });
+  html += '</select></label>';
+  html += '</div>';
+  html += '<textarea id="importText" placeholder="Paste your errors here...&#10;&#10;Supported formats:&#10;  X wrong sentence&#10;  Y correct sentence&#10;&#10;Or a markdown table:&#10;  | wrong sentence | correct sentence |"></textarea>';
+  html += '<div class="btn-group-left" style="margin-top:16px;">';
+  html += '<button class="btn" onclick="window.__gym.previewImport()">Preview & Import</button>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div id="importPreview" class="hidden"></div>';
+
+  html += '<h2 style="margin-top:24px;">Import JSON file</h2>';
+  html += '<p style="color:#666;font-size:0.9rem;margin-bottom:12px;">Merge a previously exported file into your bank.</p>';
+  html += '<div style="margin-bottom:16px;">';
+  html += '<input type="file" id="importFile" accept=".json" style="display:none;" onchange="window.__gym.handleImportFile(this)">';
+  html += '<button class="btn btn-secondary" onclick="document.getElementById(\'importFile\').click()">Choose file</button>';
+  html += '</div>';
+
+  html += '<h3 style="margin-top:24px;">Supported formats</h3>';
+  html += '<div style="font-size:0.85rem;color:#666;line-height:1.6;">';
+  html += '<p style="margin-bottom:8px;">X Wrong sentence<br>';
+  html += 'Y Correct sentence</p>';
+  html += '<p>Or a markdown table with two columns:</p>';
+  html += '<pre style="background:#f5f5f5;padding:8px;border-radius:4px;font-size:0.8rem;overflow-x:auto;">| someone who have too many friends | someone who has too many friends |</pre>';
+  html += '</div>';
+
+  document.getElementById('appView').innerHTML = html;
+};
+
+window.__gym.previewImport = function() {
+  var text = document.getElementById('importText').value.trim();
+  var category = document.getElementById('importCategory').value;
+  if (!text) { alert('Please paste some errors first.'); return; }
+  var parsed = parseImportText(text);
+  var previewDiv = document.getElementById('importPreview');
+  if (parsed.errors.length === 0) {
+    previewDiv.className = '';
+    previewDiv.innerHTML = '<div class="card"><div class="empty-state"><p>No errors found. Check your format.</p></div></div>';
+    return;
+  }
+  var html = '<div class="card">';
+  html += '<div class="preview-count">' + parsed.errors.length + ' items found</div>';
+  html += '<div class="preview-list">';
+  parsed.errors.forEach(function(err) {
+    html += '<div class="preview-item">';
+    html += '<span class="wrong">X ' + escapeHtml(err.wrong) + '</span>';
+    html += '<span class="arrow">&gt;</span>';
+    html += '<span class="right">Y ' + escapeHtml(err.right) + '</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div class="btn-group-left">';
+  html += '<button class="btn" onclick="window.__gym.confirmImport(\'' + category + '\')">Add ' + parsed.errors.length + ' to bank</button>';
+  html += '</div>';
+  html += '</div>';
+  previewDiv.className = '';
+  previewDiv.innerHTML = html;
+};
+
+window.__gym.confirmImport = function(category) {
+  var text = document.getElementById('importText').value.trim();
+  var parsed = parseImportText(text);
+  var now = todayStr();
+  parsed.errors.forEach(function(err) {
+    var existing = findDuplicate(state.errors, err.wrong, err.right);
+    if (!existing) {
+      var diff = diffSentence(err.wrong, err.right);
+      var isFossil = state.errors.some(function(e) { return e.wrong_sentence === err.wrong && e.right_sentence === err.right && e.fossil === true; });
+      state.errors.push({
+        id: generateId(), added: now, category: category,
+        wrong_sentence: err.wrong, right_sentence: err.right,
+        wrong_part: diff.wrongPart, right_part: diff.rightPart,
+        note: '', fossil: isFossil, streak: 0, interval: 0,
+        next_due: now, attempts: 0, correct: 0,
+        confidence_sum: 0, last_seen: null, history: [],
+        blind_spot: false, similar_sentences: []
+      });
+    }
+  });
+  addSession(parsed.errors.length);
+  saveState();
+  document.getElementById('importText').value = '';
+  var preview = document.getElementById('importPreview');
+  preview.className = 'hidden';
+  preview.innerHTML = '';
+  alert(parsed.errors.length + ' error' + (parsed.errors.length !== 1 ? 's' : '') + ' added to the bank!');
+};
+
+function parseImportText(text) {
+  var lines = text.split('\n');
+  var errors = [];
+  var wrongLine = null;
+  var isTable = lines.some(function(line) { return line.trim().startsWith('|'); });
+  if (isTable) {
+    lines.forEach(function(line) {
+      line = line.trim();
+      if (!line.startsWith('|')) return;
+      var cells = line.split('|').map(function(c) { return c.trim(); }).filter(function(c) { return c.length > 0 && c !== '---'; });
+      if (cells.length >= 2) {
+        var wrong = cells[0].replace(/^[xX]+/i, '').trim();
+        var right = cells[1].replace(/^[yY]+/i, '').trim();
+        if (wrong && right) errors.push({ wrong: wrong, right: right });
+      }
+    });
+  } else {
+    lines.forEach(function(line) {
+      line = line.trim();
+      if (!line) return;
+      if (/^[xX]/.test(line)) { wrongLine = line.replace(/^[xX]+/i, '').trim(); }
+      else if (/^[yY]/.test(line) || /^correct$/i.test(line) || /^right$/i.test(line)) {
+        var rt = line.replace(/^[yYcorrectright]+/i, '').trim();
+        if (wrongLine && rt) { errors.push({ wrong: wrongLine, right: rt }); wrongLine = null; }
+      }
+    });
+    if (wrongLine) {
+      var ai = wrongLine.indexOf('>');
+      if (ai > 0) {
+        var parts = [wrongLine.substring(0, ai).trim(), wrongLine.substring(ai + 1).trim()];
+        if (parts[0] && parts[1]) errors.push({ wrong: parts[0], right: parts[1] });
+      }
+    }
+  }
+  return { errors: errors };
+}
+
+function findDuplicate(errors, wrong, right) {
+  return errors.find(function(e) { return e.wrong_sentence.toLowerCase() === wrong.toLowerCase() && e.right_sentence.toLowerCase() === right.toLowerCase(); });
+}
+
+viewFunctions.bank = function() {
+  var filtered = getFilteredErrors();
+  var html = '<div class="card">';
+  html += '<div class="bank-controls">';
+  html += '<div class="filter-group">';
+  html += '<select id="bankCategoryFilter" onchange="window.__gym.renderBank()">';
+  html += '<option value="all">All categories</option>';
+  Object.keys(CATEGORIES).forEach(function(cat) { html += '<option value="' + cat + '">' + cat + '</option>'; });
+  html += '</select>';
+  html += '<label><input type="checkbox" id="bankStatusFilter" onchange="window.__gym.renderBank()"> Fossilized only</label>';
+  html += '</div>';
+  html += '<div>';
+  html += '<button class="btn btn-secondary btn-small" onclick="window.__gym.exportJSON()">Export JSON</button>';
+  html += '<button class="btn btn-secondary btn-small" onclick="document.getElementById(\'importJsonFile\').click()">Import JSON</button>';
+  html += '<input type="file" id="importJsonFile" accept=".json" style="display:none;" onchange="window.__gym.handleImportFile(this)">';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<table class="error-table">';
+  html += '<thead><tr>';
+  html += '<th>Status</th>';
+  html += '<th>Wrong &gt; Right</th>';
+  html += '<th style="width:50px;">Acc</th>';
+  html += '<th style="width:50px;">Due</th>';
+  html += '<th style="width:40px;"></th>';
+  html += '</tr></thead><tbody>';
+
+  if (filtered.length === 0) {
+    html += '<tr><td colspan="5" style="text-align:center;color:#666;padding:40px;">No errors in bank yet.</td></tr>';
+  } else {
+    filtered.forEach(function(err) {
+      var status = getStatus(err);
+      var statusLabel = status === 'new' ? 'New' : status === 'learning' ? 'Learning' : status === 'mastered' ? 'Mastered' : 'Fossil';
+      var statusClass = 'status-' + status;
+      var accuracy = err.attempts > 0 ? Math.round(err.correct / err.attempts * 100) : 0;
+      var dueInfo = err.next_due && err.next_due > todayStr() ? daysUntil(err.next_due) + 'd' : 'now';
+      html += '<tr>';
+      html += '<td><span class="status-pill ' + statusClass + '">' + (err.fossil && status !== 'fossil' ? 'Fossil ' : '') + statusLabel + '</span>' + (err.blind_spot ? ' <span class="blind-spot">!</span>' : '') + '</td>';
+      html += '<td>';
+      html += '<span class="sentence-wrong" title="Wrong">' + escapeHtml(err.wrong_sentence) + '</span>';
+      html += '<span style="color:#999;">&gt;</span> ';
+      html += '<span class="sentence-right" title="Right">' + escapeHtml(err.right_sentence) + '</span>';
+      html += '</td>';
+      html += '<td>' + accuracy + '%</td>';
+      html += '<td>' + dueInfo + '</td>';
+      html += '<td><button class="expand-btn" onclick="window.__gym.expandError(\'' + err.id + '\')">+</button></td>';
+      html += '</tr>';
+    });
+  }
+
+  html += '</tbody></table>';
+  html += '<div style="margin-top:12px;font-size:0.85rem;color:#666;">' + filtered.length + ' item' + (filtered.length !== 1 ? 's' : '') + '</div>';
+  html += '</div>';
+  document.getElementById('appView').innerHTML = html;
+};
+
+window.__gym.renderBank = function() { render(); };
+
+window.__gym.expandError = function(id) {
+  var err = state.errors.find(function(e) { return e.id === id; });
+  if (!err) return;
+  var html = '<div class="card">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+  html += '<h2>Error detail</h2>';
+  html += '<button class="btn btn-secondary btn-small" onclick="window.__gym.closeErrorDetail()">Close</button>';
+  html += '</div>';
+  html += '<div class="error-detail">';
+  html += '<div class="field"><div class="field-label">Category</div><span class="tag">' + err.category + '</span></div>';
+  html += '<div class="field"><div class="field-label">Wrong sentence</div><div style="color:#dc2626;font-family:monospace;">' + escapeHtml(err.wrong_sentence) + ' <button class="speaker-btn" onclick="window.__gym.speak(\'' + escapeHtml(err.wrong_sentence) + '\')"> speak</button></div></div>';
+  html += '<div class="field"><div class="field-label">Correct sentence</div><div style="color:#16a34a;font-family:monospace;">' + escapeHtml(err.right_sentence) + ' <button class="speaker-btn" onclick="window.__gym.speak(\'' + escapeHtml(err.right_sentence) + '\')"> speak</button></div></div>';
+  html += '<div class="field"><div class="field-label">Teacher note</div><input type="text" class="note-input" id="noteInput" value="' + escapeHtml(err.note || '') + '" placeholder="Add a hint..."></div>';
+  if (err.similar_sentences && err.similar_sentences.length > 0) {
+    html += '<div class="field"><div class="field-label">Similar sentences</div>';
+    err.similar_sentences.forEach(function(s) { html += '<div style="font-family:monospace;padding:4px 0;color:#666;">' + escapeHtml(s) + '</div>'; });
+    html += '</div>';
+  }
+  html += '<div class="field"><div class="field-label">History</div>';
+  if (err.history.length === 0) {
+    html += '<div style="color:#999;font-size:0.85rem;">No attempts yet.</div>';
+  } else {
+    err.history.forEach(function(h) {
+      html += '<div class="history-item">';
+      html += '<span class="date">' + h.date + '</span>';
+      html += '<span class="' + (h.correct ? 'result-correct' : 'result-wrong') + '">' + (h.correct ? 'Correct' : 'Wrong') + '</span>';
+      html += '<span style="color:#666;">conf: ' + h.confidence + '</span>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+  html += '<div class="field" style="display:flex;gap:8px;justify-content:space-between;align-items:center;">';
+  html += '<div><button class="btn btn-danger btn-small" onclick="window.__gym.deleteError(\'' + err.id + '\')">Delete</button></div>';
+  html += '<div><button class="btn btn-small" onclick="window.__gym.saveNote(\'' + err.id + '\')">Save note</button></div>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+
+  var existing = document.getElementById('errorDetail');
+  if (existing) {
+    existing.innerHTML = html;
+  } else {
+    var div = document.createElement('div');
+    div.id = 'errorDetail';
+    div.className = 'hidden';
+    document.body.appendChild(div);
+    div.innerHTML = html;
+    div.className = '';
+  }
+};
+
+window.__gym.closeErrorDetail = function() { var d = document.getElementById('errorDetail'); if (d) d.className = 'hidden'; };
+
+window.__gym.saveNote = function(id) {
+  var err = state.errors.find(function(e) { return e.id === id; });
+  if (!err) return;
+  var input = document.getElementById('noteInput');
+  if (input) { err.note = input.value; saveState(); window.__gym.closeErrorDetail(); render(); }
+};
+
+window.__gym.deleteError = function(id) {
+  if (!confirm('Delete this error from the bank?')) return;
+  state.errors = state.errors.filter(function(e) { return e.id !== id; });
+  saveState();
+  window.__gym.closeErrorDetail();
+  render();
+};
+
+window.__gym.exportJSON = function() {
+  var data = { exportedAt: todayStr(), version: 1, errors: state.errors, sessions: state.sessions, settings: state.settings };
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'grammar-gym-' + todayStr() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+window.__gym.importJSON = function(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data.errors || !Array.isArray(data.errors)) { alert('Invalid file format.'); return; }
+      var imported = 0;
+      data.errors.forEach(function(err) {
+        var existing = state.errors.find(function(e) { return e.id === err.id; });
+        if (!existing) { state.errors.push(err); imported++; }
+      });
+      if (data.sessions && Array.isArray(data.sessions)) {
+        data.sessions.forEach(function(sess) {
+          var existing = state.sessions.find(function(s) { return s.date === sess.date; });
+          if (!existing) state.sessions.push(sess);
+        });
+      }
+      saveState();
+      render();
+      alert(imported + ' error' + (imported !== 1 ? 's' : '') + ' imported.');
+    } catch (err) { alert('Error reading file: ' + err.message); }
+  };
+  reader.readAsText(file);
+};
+
+window.__gym.handleImportFile = function(input) {
+  if (input.files && input.files[0]) window.__gym.importJSON(input.files[0]);
+};
+
+function getDueCount() { return state.errors.filter(function(e) { return isDue(e); }).length; }
+
+function getDueItems(category, fossilOnly) {
+  return state.errors.filter(function(e) {
+    if (!isDue(e)) return false;
+    if (category && category !== 'all' && e.category !== category) return false;
+    if (fossilOnly && !e.fossil) return false;
+    return true;
+  });
+}
+
+function getStats() {
+  var total = state.errors.length;
+  var nc = state.errors.filter(function(e) { return getStatus(e) === 'new'; }).length;
+  var lc = state.errors.filter(function(e) { return getStatus(e) === 'learning'; }).length;
+  var mc = state.errors.filter(function(e) { return getStatus(e) === 'mastered'; }).length;
+  return { total: total, newCount: nc, learningCount: lc, masteredCount: mc };
+}
+
+function getWeakestCategories(limit) {
+  var cs = {};
+  state.errors.forEach(function(e) {
+    if (!cs[e.category]) cs[e.category] = { correct: 0, total: 0 };
+    cs[e.category].total += e.attempts;
+    cs[e.category].correct += e.correct;
+  });
+  var result = [];
+  Object.keys(cs).forEach(function(code) {
+    var s = cs[code];
+    if (s.total > 0) result.push({ code: code, accuracy: Math.round(s.correct / s.total * 100) });
+  });
+  result.sort(function(a, b) { return a.accuracy - b.accuracy; });
+  return result.slice(0, limit);
+}
+
+function getRecentSessions(limit) {
+  var sorted = state.sessions.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
+  return sorted.slice(0, limit);
+}
+
+function addSession(added) {
+  var today = todayStr();
+  var existing = state.sessions.find(function(s) { return s.date === today; });
+  if (existing) existing.added += added;
+  else state.sessions.push({ date: today, added: added });
+}
+
+function recordAnswer(error, correct, confidence) {
+  error.attempts++;
+  if (correct) {
+    error.correct++;
+    error.streak++;
+    error.interval = SRS_INTERVALS[Math.min(error.streak, SRS_INTERVALS.length - 1)];
+    error.next_due = addDays(todayStr(), error.interval);
+  } else {
+    error.streak = 0;
+    error.interval = 0;
+    error.next_due = todayStr();
+    if (confidence === 3) { error.blind_spot = true; error.next_due = todayStr(); }
+  }
+  error.confidence_sum += confidence;
+  error.last_seen = todayStr();
+  error.history.push({ date: todayStr(), correct: correct, confidence: confidence });
+  saveState();
+}
+
+function pickExerciseType(error) {
+  var types = ['rewrite'];
+  var diff = diffSentence(error.wrong_sentence, error.right_sentence);
+  if (diff.rightPart && diff.rightPart.split(/\s+/).length < 8) types.push('gapfill');
+  var distractors = generateDistractors(error);
+  if (distractors.length >= 3) types.push('mc');
+  types.push('correctornot');
+  return types[Math.floor(Math.random() * types.length)];
+}
+
+function generateDistractors(error) {
+  var diff = diffSentence(error.wrong_sentence, error.right_sentence);
+  var rp = diff.rightPart.toLowerCase();
+  var wp = diff.wrongPart.toLowerCase();
+  var d = [];
+  if (wp) d.push(wp);
+  var sc = state.errors.filter(function(e) { return e.category === error.category && e.right_part && e.right_part.toLowerCase() !== rp && e.right_part.toLowerCase() !== wp; });
+  sc.forEach(function(e) { var r = e.right_part.toLowerCase(); if (r && d.indexOf(r) === -1) d.push(r); });
+  if (d.length > 6) d = shuffleArray(d).slice(0, 6);
+  FALLBACK_DISTRACTORS.forEach(function(f) {
+    if (d.length >= 3) return;
+    var fl = f.toLowerCase();
+    if (fl !== rp && fl !== wp && d.indexOf(fl) === -1) d.push(fl);
+  });
+  d = d.filter(function(x) { return x.toLowerCase() !== rp; });
+  return shuffleArray(d);
+}
+
+function getFilteredErrors() {
+  var catEl = document.getElementById('bankCategoryFilter');
+  var stEl = document.getElementById('bankStatusFilter');
+  var category = catEl ? catEl.value : 'all';
+  var status = 'all';
+  if (stEl && stEl.checked) status = 'fossil';
+  return state.errors.filter(function(e) {
+    if (category !== 'all' && e.category !== category) return false;
+    if (status === 'fossil' && !e.fossil) return false;
+    return true;
+  }).sort(function(a, b) { return b.added.localeCompare(a.added); });
+}
+
+function getWeeklyReview() {
+  var today = new Date();
+  var weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  var was = weekAgo.getFullYear() + '-' + String(weekAgo.getMonth() + 1).padStart(2, '0') + '-' + String(weekAgo.getDate()).padStart(2, '0');
+  var ta = 0, ca = 0;
+  state.errors.forEach(function(e) {
+    if (e.history) { e.history.forEach(function(h) { if (h.date >= was) { ta++; if (h.correct) ca++; } }); }
+  });
+  var nt = state.sessions.filter(function(s) { return s.date >= was; }).reduce(function(s, x) { return s + x.added; }, 0);
+  var acc = ta > 0 ? Math.round(ca / ta * 100) : 0;
+  var mt = 0;
+  state.errors.forEach(function(e) {
+    if (e.history && e.history.length >= 2) {
+      var l = e.history[e.history.length - 1], p = e.history[e.history.length - 2];
+      if (l.date >= was && p.date < was) {
+        var pa = p.correct ? 100 : 0;
+        var cs = 0;
+        for (var i = e.history.length - 1; i >= 0; i--) { if (e.history[i].correct) cs++; else break; }
+        var ca2 = e.attempts > 0 ? e.correct / e.attempts : 0;
+        if (cs >= 4 && ca2 >= 0.8 && pa < 0.8) mt++;
+      }
+    }
+  });
+  var imp = [];
+  var cb = {}, ca2 = {};
+  state.errors.forEach(function(e) {
+    if (!e.history) return;
+    var b = e.history.filter(function(h) { return h.date < was; });
+    var a = e.history.filter(function(h) { return h.date >= was; });
+    if (!cb[e.category]) cb[e.category] = { correct: 0, total: 0 };
+    if (!ca2[e.category]) ca2[e.category] = { correct: 0, total: 0 };
+    cb[e.category].correct += b.filter(function(h) { return h.correct; }).length;
+    cb[e.category].total += b.length;
+    ca2[e.category].correct += a.filter(function(h) { return h.correct; }).length;
+    ca2[e.category].total += a.length;
+  });
+  Object.keys(ca2).forEach(function(cat) {
+    var bp = cb[cat] && cb[cat].total > 0 ? Math.round(cb[cat].correct / cb[cat].total * 100) : 0;
+    var ap = ca2[cat].total > 0 ? Math.round(ca2[cat].correct / ca2[cat].total * 100) : bp;
+    var ch = ap - bp;
+    if (Math.abs(ch) >= 10) imp.push({ code: cat, from: bp, to: ap, change: ch });
+  });
+  imp.sort(function(a, b) { return Math.abs(b.change) - Math.abs(a.change); });
+  return { totalAnswers: ta, accuracy: acc, newThisWeek: nt, masteredThisWeek: mt, improvements: imp.slice(0, 3) };
+}
+
+function init() {
+  if (state.errors.length === 0 && window.SEED_DATA && window.SEED_DATA.sessions && window.SEED_DATA.sessions.length > 0) loadSeedData();
+  document.querySelectorAll('header nav button').forEach(function(btn) { btn.addEventListener('click', function() { navigate(btn.dataset.view); }); });
+  render();
+}
+
+function loadSeedData() {
+  var today = todayStr();
+  var data = window.SEED_DATA;
+  if (!data) { return; }
+
+  // Initialize student record
+  state.student = {
+    name: data.student || 'Student',
+    level: data.level || 1,
+    sublevel: data.sublevel || 0
+  };
+
+  var fossilSet = {};
+  if (data.fossilised && Array.isArray(data.fossilised)) {
+    data.fossilised.forEach(function(f) {
+      fossilSet[f.wrong + '||' + f.right] = true;
+    });
+  }
+
+  // Sort sessions oldest first so we can stagger properly
+  var sortedSessions = (data.sessions || []).slice().sort(function(a, b) {
+    return a.date.localeCompare(b.date);
+  });
+
+  var errors = [];
+  var sessionLog = [];
+  var seenPairs = {};
+
+  sortedSessions.forEach(function(sess) {
+    var sessErrors = [];
+    (sess.errors || []).forEach(function(e) {
+      var key = e.wrong + '||' + e.right;
+      if (seenPairs[key]) return; // dedup across sessions
+      seenPairs[key] = true;
+
+      var diff = diffSentence(e.wrong, e.right);
+      var isFossil = fossilSet[key] === true;
+      var nextDue;
+      if (isFossil) {
+        nextDue = today;
+      } else if (sess.date === '2025-10-07' || sess.id === 's2') {
+        // Session 2 (Oct 7) — due today
+        nextDue = today;
+      } else {
+        // Session 1 (Oct 4) — due tomorrow
+        nextDue = addDays(today, 1);
+      }
+
+      var err = {
+        id: generateId(),
+        added: sess.date,
+        category: e.cat || e.category || 'G-SVA',
+        wrong_sentence: e.wrong,
+        right_sentence: e.right,
+        wrong_part: diff.wrongPart,
+        right_part: diff.rightPart,
+        note: e.note || '',
+        fossil: isFossil,
+        streak: 0,
+        interval: 0,
+        next_due: nextDue,
+        attempts: 0,
+        correct: 0,
+        confidence_sum: 0,
+        last_seen: null,
+        history: [],
+        blind_spot: false,
+        similar_sentences: e.similar || []
+      };
+      errors.push(err);
+      sessErrors.push(err);
+    });
+
+    if (sessErrors.length > 0) {
+      sessionLog.push({
+        date: sess.date,
+        added: sessErrors.length,
+        label: sess.label || sess.id
+      });
+    }
+  });
+
+  state.errors = errors;
+  state.sessions = sessionLog.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  saveState();
+}
+
+window.__gym.state = state;
+window.__gym.loadState = loadState;
+window.__gym.saveState = saveState;
+
+document.addEventListener('DOMContentLoaded', init);
+if (document.readyState !== 'loading') init();
+
+})();
+</script>
+</body>
+</html>
